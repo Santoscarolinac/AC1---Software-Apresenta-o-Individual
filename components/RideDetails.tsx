@@ -6,6 +6,7 @@ import { StarIcon } from './icons/StarIcon';
 import { CreditCardIcon } from './icons/CreditCardIcon';
 import { CashIcon } from './icons/CashIcon';
 import { PixIcon } from './icons/PixIcon';
+import { UsersIcon } from './icons/UsersIcon';
 
 interface RideDetailsProps {
   trip: Trip;
@@ -45,7 +46,13 @@ const RideDetails: React.FC<RideDetailsProps> = ({ trip, onConfirm, onCancel }) 
         </div>
         {/* Vehicle Card */}
         <div className="bg-gray-50 p-4 rounded-lg border">
-          <h3 className="font-bold text-lg mb-2 flex items-center"><CarIcon className="h-5 w-5 mr-2 text-gray-500" /> Veículo</h3>
+            <div className="flex justify-between items-start">
+                <h3 className="font-bold text-lg mb-2 flex items-center"><CarIcon className="h-5 w-5 mr-2 text-gray-500" /> Veículo</h3>
+                <div className="flex items-center text-sm font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded-full">
+                    <UsersIcon className="h-4 w-4 mr-1.5" />
+                    <span>{trip.capacity} lugares</span>
+                </div>
+            </div>
           <p className="font-semibold text-xl">{trip.vehicle.make} {trip.vehicle.model}</p>
           <p className="text-gray-600">Cor: {trip.vehicle.color}</p>
           <p className="text-gray-600">Placa: {trip.vehicle.licensePlate}</p>
@@ -54,7 +61,7 @@ const RideDetails: React.FC<RideDetailsProps> = ({ trip, onConfirm, onCancel }) 
 
       {/* Passengers */}
       <div className="mb-6">
-        <h3 className="font-bold text-lg mb-2">Outros Passageiros</h3>
+        <h3 className="font-bold text-lg mb-2">Outros Passageiros ({trip.passengers.length})</h3>
         <div className="flex space-x-2">
           {trip.passengers.map(p => (
             <div key={p.id} className="text-center">

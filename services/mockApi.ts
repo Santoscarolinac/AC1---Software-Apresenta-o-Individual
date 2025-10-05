@@ -1,4 +1,4 @@
-import { Trip, Driver, Vehicle, User } from '../types';
+import { Trip, Driver, Vehicle, User, PassengerRequest } from '../types';
 
 export const findRide = async (destination: string): Promise<Trip> => {
   // Simulate a network delay
@@ -39,5 +39,38 @@ export const findRide = async (destination: string): Promise<Trip> => {
     totalCost: parseFloat(totalCost.toFixed(2)),
     pickupCode: `ID-${Math.floor(Math.random() * 9000) + 1000}`,
     estimatedDurationMinutes: Math.floor(Math.random() * (45 - 15 + 1) + 15), // e.g., 15 to 45 minutes
+    capacity: 4,
   };
+};
+
+export const getPassengerRequests = async (): Promise<PassengerRequest[]> => {
+  // Simulate a network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  return [
+    {
+      id: 'req-1',
+      passenger: { id: 'pass-10', name: 'Fernanda Lima', avatarUrl: 'https://picsum.photos/id/1012/100/100' },
+      destination: 'Aeroporto de Guarulhos',
+      date: new Date(Date.now() - 3600 * 1000 * 1).toISOString(), // 1 hour ago
+    },
+    {
+      id: 'req-2',
+      passenger: { id: 'pass-11', name: 'Carlos Souza', avatarUrl: 'https://picsum.photos/id/1027/100/100' },
+      destination: 'Shopping Morumbi',
+      date: new Date(Date.now() - 3600 * 1000 * 3).toISOString(), // 3 hours ago
+    },
+    {
+      id: 'req-3',
+      passenger: { id: 'pass-12', name: 'Beatriz Costa', avatarUrl: 'https://picsum.photos/id/1013/100/100' },
+      destination: 'Parque Ibirapuera',
+      date: new Date(Date.now() - 3600 * 1000 * 5).toISOString(), // 5 hours ago
+    },
+     {
+      id: 'req-4',
+      passenger: { id: 'pass-14', name: 'Lucas Martins', avatarUrl: 'https://picsum.photos/id/1022/100/100' },
+      destination: 'Avenida Paulista',
+      date: new Date(Date.now() - 3600 * 1000 * 8).toISOString(), // 8 hours ago
+    }
+  ];
 };

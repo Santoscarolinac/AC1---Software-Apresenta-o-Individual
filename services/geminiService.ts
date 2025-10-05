@@ -2,19 +2,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { Trip } from "../types";
 
-// IMPORTANT: This check is to prevent crashing in environments where process.env is not defined.
-const apiKey = typeof process !== 'undefined' && process.env && process.env.API_KEY
-  ? process.env.API_KEY
-  : "YOUR_API_KEY"; // Fallback, though the app assumes env var is set.
+// IMPORTANT: This check prevents crashing in environments where process.env is not defined.
+const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
 
-if (apiKey === "YOUR_API_KEY") {
+if (!apiKey) {
     console.warn("Gemini API key is not configured. Please set the API_KEY environment variable.");
 }
 
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 
 export const generateTripSummary = async (trip: Trip): Promise<string> => {
-    if (apiKey === "YOUR_API_KEY") {
+    if (!apiKey) {
         return "Serviço de IA não configurado. Dicas de segurança: 1. Confirme os dados do motorista. 2. Compartilhe sua viagem. 3. Use o cinto de segurança.";
     }
   

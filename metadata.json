@@ -1,0 +1,5 @@
+{
+  "name": "App Caronas / Mesmo Destino",
+  "description": "A ride-sharing application that connects drivers and passengers heading to the same destination, focusing on safety, economy, and efficiency. Features include intelligent matching, real-time trip sharing, and secure payment simulation.",
+  "requestFramePermissions": []
+}

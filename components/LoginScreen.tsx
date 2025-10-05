@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserIcon } from './icons/UserIcon';
 import { ShieldCheckIcon } from './icons/ShieldCheckIcon';
@@ -24,8 +23,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginOrRegister }) => {
   return (
     <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mt-8 max-w-md mx-auto text-center">
       <img 
-        src="https://storage.googleapis.com/gemini-prod-us-west1-assets/e8f70355403e2303_i3.png" 
-        alt="Ilustração de um mapa com um pino de geolocalização" 
+        src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop" 
+        alt="Carro em uma rodovia, simbolizando uma viagem de carona" 
         className="rounded-xl shadow-md object-cover w-full h-48 mb-6"
       />
       <h2 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo(a)!</h2>

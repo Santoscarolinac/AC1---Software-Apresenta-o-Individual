@@ -29,7 +29,7 @@ export const findRide = async (destination: string): Promise<Trip> => {
 
   return {
     id: `trip-${Date.now()}`,
-    origin: 'Centro da Cidade',
+    origin: 'Praça da Sé, Sé, São Paulo - SP, 01001-000, Brasil',
     destination,
     date: new Date().toISOString(),
     driver: mockDriver,

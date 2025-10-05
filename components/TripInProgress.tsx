@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Trip } from '../types';
 import { generateTripSummary } from '../services/geminiService';
 import { ShieldCheckIcon } from './icons/ShieldCheckIcon';
 import { ClockIcon } from './icons/ClockIcon';
+
+declare global {
+    interface Window {
+        initMap?: () => void;
+        google?: any;
+    }
+}
 
 interface TripInProgressProps {
   trip: Trip;
@@ -14,21 +21,19 @@ const TripInProgress: React.FC<TripInProgressProps> = ({ trip, onEndTrip }) => {
   const [timeLeft, setTimeLeft] = useState(trip.estimatedDurationMinutes);
   const [summary, setSummary] = useState<string>('Gerando resumo da viagem e dicas de segurança com IA...');
   const [loadingSummary, setLoadingSummary] = useState(true);
-  const pathRef = useRef<SVGPathElement>(null);
-  const [pathLength, setPathLength] = useState(0);
+  
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapError, setMapError] = useState(false);
+  const [isMapScriptLoaded, setMapScriptLoaded] = useState(!!window.google?.maps);
 
-  useEffect(() => {
-    if (pathRef.current) {
-      setPathLength(pathRef.current.getTotalLength());
-    }
-  }, []);
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         const result = await generateTripSummary(trip);
         setSummary(result);
-      } catch (error) {
+      } catch (error)
+      {
         console.error(error);
         setSummary("Não foi possível carregar o resumo. Tenha uma ótima viagem!");
       } finally {
@@ -41,14 +46,22 @@ const TripInProgress: React.FC<TripInProgressProps> = ({ trip, onEndTrip }) => {
 
   useEffect(() => {
     if (progress < 100) {
+      const durationInMs = trip.estimatedDurationMinutes * 60 * 1000;
+      const interval = 500;
+      const increment = (interval / durationInMs) * 100;
+      
       const timer = setInterval(() => {
         setProgress(prev => {
-            const newProgress = Math.min(prev + 1, 100);
-            const newTimeLeft = Math.ceil(trip.estimatedDurationMinutes * (1 - (newProgress / 100)));
-            setTimeLeft(newTimeLeft);
+            const newProgress = Math.min(prev + increment, 100);
+            if (newProgress < 100) {
+              const newTimeLeft = Math.ceil(trip.estimatedDurationMinutes * (1 - (newProgress / 100)));
+              setTimeLeft(newTimeLeft);
+            } else {
+              setTimeLeft(0);
+            }
             return newProgress;
         });
-      }, 500);
+      }, interval);
       return () => clearInterval(timer);
     } else {
       const endTimer = setTimeout(() => {
@@ -58,7 +71,76 @@ const TripInProgress: React.FC<TripInProgressProps> = ({ trip, onEndTrip }) => {
     }
   }, [progress, onEndTrip, trip.estimatedDurationMinutes]);
 
-  const strokeDashoffset = pathLength - (pathLength * progress) / 100;
+  const initMap = useCallback(() => {
+    if (!mapRef.current || !window.google?.maps) return;
+
+    const directionsService = new window.google.maps.DirectionsService();
+    const directionsRenderer = new window.google.maps.DirectionsRenderer();
+    const map = new window.google.maps.Map(mapRef.current, {
+        zoom: 12,
+        center: { lat: -23.55052, lng: -46.633308 }, // São Paulo
+        disableDefaultUI: true,
+    });
+    directionsRenderer.setMap(map);
+
+    directionsService.route(
+        {
+            origin: trip.origin,
+            destination: trip.destination,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result: any, status: any) => {
+            if (status === window.google.maps.DirectionsStatus.OK) {
+                directionsRenderer.setDirections(result);
+            } else {
+                console.error(`Directions request failed due to ${status}`);
+                setMapError(true);
+            }
+        }
+    );
+  }, [trip.origin, trip.destination]);
+
+  useEffect(() => {
+    if (isMapScriptLoaded) {
+        initMap();
+        return;
+    }
+
+    const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
+
+    if (!apiKey || apiKey === 'YOUR_API_KEY') {
+        console.error("Google Maps API key is not configured.");
+        setMapError(true);
+        return;
+    }
+
+    const scriptId = "google-maps-script";
+    if (document.getElementById(scriptId)) {
+        return;
+    }
+
+    window.initMap = () => {
+        setMapScriptLoaded(true);
+    };
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+        console.error("Google Maps script failed to load.");
+        setMapError(true);
+    };
+    document.head.appendChild(script);
+    
+    return () => {
+      if (window.initMap) {
+        delete window.initMap;
+      }
+    }
+  }, [isMapScriptLoaded, initMap]);
+
 
   return (
     <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 mt-8">
@@ -67,35 +149,17 @@ const TripInProgress: React.FC<TripInProgressProps> = ({ trip, onEndTrip }) => {
       
       {/* Map and ETA */}
       <div className="mb-6">
-        <div className="relative aspect-video w-full rounded-xl overflow-hidden shadow-md border">
-           <img 
-              src="https://storage.googleapis.com/gemini-prod-us-west1-assets/53239a543b5f7e7f_i1.png" 
-              alt="Map of a city route"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 180" preserveAspectRatio="none">
-                {/* Full route path (background) */}
-                <path
-                    ref={pathRef}
-                    d="M20 130 Q60 80 100 90 T180 80 T240 120 T300 110"
-                    fill="none"
-                    stroke="#A9A9A9"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeDasharray="8 8"
-                />
-                {/* Progress path */}
-                 <path
-                    d="M20 130 Q60 80 100 90 T180 80 T240 120 T300 110"
-                    fill="none"
-                    stroke="#16a34a"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeDasharray={pathLength}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-                />
-            </svg>
+        <div ref={mapRef} className="relative aspect-video w-full rounded-xl overflow-hidden shadow-md border bg-gray-200">
+           {!isMapScriptLoaded && !mapError && (
+             <div className="flex items-center justify-center h-full text-center text-gray-600">
+                <p>Carregando mapa...</p>
+             </div>
+           )}
+           {mapError && (
+             <div className="flex items-center justify-center h-full text-center text-gray-600 px-4">
+                <p>Não foi possível carregar o mapa.<br/>Isso pode ser devido a uma chave de API inválida ou restrições de endereço.</p>
+             </div>
+           )}
         </div>
       </div>
        

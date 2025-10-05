@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { AppState, Trip, User, UserRole, Vehicle, OfferedRide, PassengerRequest } from './types';
 import Header from './components/Header';
@@ -85,7 +86,9 @@ const App: React.FC = () => {
   
   const handleLogin = (name: string) => {
     // This is a simplified login for demo purposes.
-    const existingUser = Object.values(users).find(u => u.name.toLowerCase() === name.toLowerCase());
+    // FIX: Switched from Object.values to Object.keys().map() for better type inference,
+    // which resolves an issue where `existingUser` was inferred as `unknown`.
+    const existingUser = Object.keys(users).map(k => users[k]).find(u => u.name.toLowerCase() === name.toLowerCase());
     if (existingUser) {
         setCurrentUser(existingUser);
         if (existingUser.role === UserRole.DRIVER) {

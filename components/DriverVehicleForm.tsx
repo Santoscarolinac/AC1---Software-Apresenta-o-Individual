@@ -39,7 +39,8 @@ const DriverVehicleForm: React.FC<DriverVehicleFormProps> = ({ onSubmit }) => {
     e.preventDefault();
     
     // Basic validation
-    if (Object.values(vehicle).some(v => v.trim() === '')) {
+    // FIX: Explicitly type `v` as `string` to allow calling `trim`.
+    if (Object.values(vehicle).some((v: string) => v.trim() === '')) {
       setFormError('Por favor, preencha todos os campos.');
       return;
     }
